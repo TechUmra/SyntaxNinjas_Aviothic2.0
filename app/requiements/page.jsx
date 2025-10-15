@@ -1,25 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabase } from "@/lib/supabaseClient"; // Use your existing client
 
 export default function RequestedDonationsStatus() {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch donations from Supabase
   const fetchDonations = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("requested_donations")
-      .select(
-        `
+      .select(`
         id,
         user_id,
         item_name,
@@ -29,17 +21,13 @@ export default function RequestedDonationsStatus() {
         status,
         claimed_by,
         claimed_at,
-        created_at,
-        updated_at
-      `
-      )
+        created_at
+      `)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching donations:", error);
-    } else {
-      setDonations(data);
-    }
+    if (error) console.error("Error fetching donations:", error);
+    else setDonations(data);
+
     setLoading(false);
   };
 
@@ -48,56 +36,67 @@ export default function RequestedDonationsStatus() {
   }, []);
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+    <div style={{ padding: "2rem", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
+      <h1 style={{ textAlign: "center", marginBottom: "2rem", fontSize: "2rem", color: "#333" }}>
         Requested Donations Status
       </h1>
 
       {loading ? (
-        <p>Loading donations...</p>
+        <p style={{ textAlign: "center", color: "#555" }}>Loading donations...</p>
       ) : donations.length === 0 ? (
-        <p>No requested donations found.</p>
+        <p style={{ textAlign: "center", color: "#555" }}>No requested donations found.</p>
       ) : (
-        <table
-          style={{
+        <div style={{ overflowX: "auto" }}>
+          <table style={{
             width: "100%",
-            borderCollapse: "collapse",
-            textAlign: "left",
-          }}
-        >
-          <thead>
-            <tr>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Item Name</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Quantity</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Location</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Status</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Claimed By</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Claimed At</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Notes</th>
-              <th style={{ borderBottom: "2px solid #ccc", padding: "0.5rem" }}>Requested At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {donations.map((donation) => (
-              <tr key={donation.id} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "0.5rem" }}>{donation.item_name}</td>
-                <td style={{ padding: "0.5rem" }}>{donation.quantity}</td>
-                <td style={{ padding: "0.5rem" }}>{donation.location}</td>
-                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>
-                  {donation.status}
-                </td>
-                <td style={{ padding: "0.5rem" }}>{donation.claimed_by || "—"}</td>
-                <td style={{ padding: "0.5rem" }}>
-                  {donation.claimed_at ? new Date(donation.claimed_at).toLocaleString() : "—"}
-                </td>
-                <td style={{ padding: "0.5rem" }}>{donation.additional_notes || "—"}</td>
-                <td style={{ padding: "0.5rem" }}>
-                  {donation.created_at ? new Date(donation.created_at).toLocaleString() : "—"}
-                </td>
+            borderCollapse: "separate",
+            borderSpacing: "0 0.5rem",
+            backgroundColor: "#fff",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: "#f0f0f0", textAlign: "left" }}>
+                <th style={{ padding: "0.75rem 1rem" }}>Item Name</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Quantity</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Location</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Status</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Claimed By</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Claimed At</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Notes</th>
+                <th style={{ padding: "0.75rem 1rem" }}>Requested At</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {donations.map((donation) => (
+                <tr key={donation.id} style={{
+                  borderRadius: "8px",
+                  border: "1px solid #e0e0e0",
+                  marginBottom: "0.5rem",
+                  transition: "transform 0.2s",
+                  cursor: "pointer"
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.01)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                >
+                  <td style={{ padding: "0.75rem 1rem" }}>{donation.item_name}</td>
+                  <td style={{ padding: "0.75rem 1rem" }}>{donation.quantity}</td>
+                  <td style={{ padding: "0.75rem 1rem" }}>{donation.location}</td>
+                  <td style={{ padding: "0.75rem 1rem", fontWeight: "bold", color: donation.status === "pending" ? "#d97706" : "#16a34a" }}>
+                    {donation.status}
+                  </td>
+                  <td style={{ padding: "0.75rem 1rem" }}>{donation.claimed_by || "—"}</td>
+                  <td style={{ padding: "0.75rem 1rem" }}>
+                    {donation.claimed_at ? new Date(donation.claimed_at).toLocaleString() : "—"}
+                  </td>
+                  <td style={{ padding: "0.75rem 1rem" }}>{donation.additional_notes || "—"}</td>
+                  <td style={{ padding: "0.75rem 1rem" }}>
+                    {donation.created_at ? new Date(donation.created_at).toLocaleString() : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

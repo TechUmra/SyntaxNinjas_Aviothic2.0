@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -13,11 +14,40 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword(formData);
-    if (error) alert(error.message);
-    else {
-      alert("Login successful!");
-      router.push("/dashboard/donor"); // redirect to donor dashboard
+
+    // Sign in with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword(formData);
+
+    if (authError) {
+      alert(authError.message);
+      return;
+    }
+
+    // Get user profile to check role
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", authData.user.id)
+      .single();
+
+    if (profileError) {
+      alert(profileError.message);
+      return;
+    }
+
+    // Redirect according to role
+    switch (profile.role) {
+      case "donor":
+        router.push("/dashboard/donor");
+        break;
+      case "needy":
+        router.push("/dashboard/needy");
+        break;
+      case "admin":
+        router.push("/dashboard/admin");
+        break;
+      default:
+        alert("Unknown role. Please contact support.");
     }
   };
 
@@ -49,11 +79,11 @@ export default function LoginPage() {
             Login
           </button>
           <p className="text-sm text-gray-600 text-center mt-4">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-orange-500 font-semibold">
-            Signup
-          </a>
-        </p>
+            Don't have an account?{" "}
+            <a href="/signup" className="text-orange-500 font-semibold">
+              Signup
+            </a>
+          </p>
         </form>
       </div>
     </div>

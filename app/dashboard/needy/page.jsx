@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 
 export default function NeedyDashboard() {
   const [donations, setDonations] = useState([]);
@@ -19,6 +20,7 @@ export default function NeedyDashboard() {
   });
 
   const router = useRouter();
+  const formRef = useRef(null); // 👈 To scroll to request form
 
   useEffect(() => {
     fetchUserAndLocation();
@@ -40,7 +42,6 @@ export default function NeedyDashboard() {
       return;
     }
 
-    // ✅ Fetch role from profiles table
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
@@ -54,7 +55,6 @@ export default function NeedyDashboard() {
       return;
     }
 
-    // ✅ Role-based restriction
     if (profile?.role !== "needy") {
       setError("You are not authorized to access this page.");
       setLoading(false);
@@ -237,14 +237,16 @@ export default function NeedyDashboard() {
     }
   };
 
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   // 🔒 Unauthorized access view
   if (error === "You are not authorized to access this page.") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
-          <h1 className="text-3xl font-bold text-red-600 mb-2">
-            🚫 Access Denied
-          </h1>
+          <h1 className="text-3xl font-bold text-red-600 mb-2">🚫 Access Denied</h1>
           <p className="text-gray-700">
             This page is for <span className="font-semibold">Needy</span> users only.
           </p>
@@ -254,22 +256,31 @@ export default function NeedyDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-rose-100 flex flex-col items-center py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-rose-100 flex flex-col items-center py-10 px-4 relative">
+      {/* 🟠 Request Button (Top-Right Corner) */}
+      <Link
+      href="/requiements"
+      className="absolute top-6 right-6 bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-orange-600 transition flex items-center justify-center"
+    >
+      📩 Request Donation
+    </Link>
+
       <div className="text-center mb-10">
         <h1 className="text-4xl font-extrabold bg-gradient-to-r from-orange-600 to-yellow-500 bg-clip-text text-transparent">
           🙏 Welcome to Needy Dashboard
         </h1>
         <p className="text-gray-600 mt-2 text-lg">
           Find{" "}
-          <span className="font-semibold text-orange-600">
-            nearby food donations
-          </span>{" "}
+          <span className="font-semibold text-orange-600">nearby food donations</span>{" "}
           or request help 🌍
         </p>
       </div>
 
-      {/* Request Donation Form */}
-      <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-lg mb-10 border border-orange-100">
+      {/* 📦 Request Donation Form */}
+      <div
+        ref={formRef}
+        className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-lg mb-10 border border-orange-100"
+      >
         <h2 className="text-xl font-bold text-orange-700 mb-4">
           📩 Request Food Donation
         </h2>
@@ -321,6 +332,7 @@ export default function NeedyDashboard() {
         </p>
       )}
 
+      {/* Donations Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
         {filteredDonations.map((d) => (
           <div
@@ -330,9 +342,7 @@ export default function NeedyDashboard() {
             <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full opacity-30 blur-xl"></div>
 
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-bold text-xl text-orange-700">
-                {d.food_name}
-              </h3>
+              <h3 className="font-bold text-xl text-orange-700">{d.food_name}</h3>
               <span
                 className={`text-sm font-medium px-2 py-1 rounded-full ${
                   isExpired(d.expiry_time)
@@ -346,8 +356,7 @@ export default function NeedyDashboard() {
 
             <div className="space-y-1 text-gray-700">
               <p>
-                🍽️ <span className="font-semibold">{d.quantity}</span> servings
-                available
+                🍽️ <span className="font-semibold">{d.quantity}</span> servings available
               </p>
               <p>
                 ⏰{" "}
@@ -357,17 +366,11 @@ export default function NeedyDashboard() {
               </p>
               <p>
                 📍 Location:{" "}
-                <span className="font-semibold">
-                  {d.location || "Not provided"}
-                </span>
+                <span className="font-semibold">{d.location || "Not provided"}</span>
               </p>
               {d.distance && (
                 <p className="text-sm text-gray-600 mt-1">
-                  📏{" "}
-                  <span className="font-semibold">
-                    {d.distance.toFixed(2)} km
-                  </span>{" "}
-                  away
+                  📏 <span className="font-semibold">{d.distance.toFixed(2)} km</span> away
                 </p>
               )}
             </div>
@@ -377,13 +380,9 @@ export default function NeedyDashboard() {
             <div className="mt-4">
               {d.claimed_by ? (
                 d.claimed_by === userId ? (
-                  <span className="text-green-600 font-semibold">
-                    ✅ Claimed by you
-                  </span>
+                  <span className="text-green-600 font-semibold">✅ Claimed by you</span>
                 ) : (
-                  <span className="text-red-600 font-semibold">
-                    ❌ Already claimed
-                  </span>
+                  <span className="text-red-600 font-semibold">❌ Already claimed</span>
                 )
               ) : (
                 <button
