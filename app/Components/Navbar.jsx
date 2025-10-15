@@ -18,10 +18,10 @@ export default function Navbar() {
           {/* Hide text links on very small screens */}
           <div className="hidden md:flex items-center gap-6">
             <Link
-              href="#palliative-care"
+              href="/leaderboard"
               className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
             >
-              NGO
+              Leaderboard
             </Link>
             <Link
               href="/donaters"
