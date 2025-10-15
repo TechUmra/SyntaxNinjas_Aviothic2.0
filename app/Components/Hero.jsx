@@ -7,37 +7,7 @@ export default function Hero() {
     <header className="bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16 md:py-20">
         {/* Navbar */}
-        <nav className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-gray-900"
-            aria-label="FoodShare Home"
-          >
-            <div className="h-8 w-8 rounded-md bg-indigo-600" aria-hidden="true" />
-            <span className="font-semibold text-lg">FoodShare</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="#how-it-works"
-              className="px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition"
-            >
-              How it works
-            </Link>
-            <Link
-              href="#impact"
-              className="px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition"
-            >
-              Impact
-            </Link>
-            <Link
-              href="#donate"
-              className="px-4 py-2 rounded-md bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
-            >
-              Donate food
-            </Link>
-          </div>
-        </nav>
+        
 
         {/* Hero Section */}
         <div className="mt-10 grid items-center gap-8 md:grid-cols-2 md:gap-12">
