@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function DonorDashboard() {
@@ -13,10 +14,12 @@ export default function DonorDashboard() {
   const [loading, setLoading] = useState(false);
   const [donationCount, setDonationCount] = useState(0);
   const [nearbyRequests, setNearbyRequests] = useState([]);
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
-  // Haversine formula to calculate distance in km
+  // 🌍 Haversine formula for distance in km
   const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth radius in km
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -29,36 +32,62 @@ export default function DonorDashboard() {
     return R * c;
   };
 
-  // Fetch user session and donation count
+  // ✅ Fetch user + role validation + location
   useEffect(() => {
     const fetchUserAndDonations = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await fetchDonationCount(session.user.id);
-      } else {
-        alert("You must log in first");
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error("User fetch error:", userError);
+        setError("Please sign in to access this page.");
+        return;
+      }
+
+      const user = userData?.user;
+      if (!user) {
+        setError("No authenticated user found.");
+        return;
+      }
+
+      // ✅ Fetch user role from profiles
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        setError("Unable to fetch user role.");
+        return;
+      }
+
+      // ✅ Role protection
+      if (profile?.role !== "donor") {
+        setError("You are not authorized to access this page.");
+        return;
+      }
+
+      setUser(user);
+      await fetchDonationCount(user.id);
+
+      // 🌍 Get location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            setLocation(`${lat},${lon}`);
+            fetchNearbyRequests(lat, lon);
+          },
+          (err) => console.error(err)
+        );
       }
     };
-    fetchUserAndDonations();
 
-    // Get donor location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          setLocation(`${lat},${lon}`);
-          fetchNearbyRequests(lat, lon);
-        },
-        (err) => console.error(err)
-      );
-    }
+    fetchUserAndDonations();
   }, []);
 
-  // Fetch total donations made by this donor
+  // 📊 Fetch total donations made by this donor
   const fetchDonationCount = async (donorId) => {
     const { data, error } = await supabase
       .from("donations")
@@ -69,7 +98,7 @@ export default function DonorDashboard() {
     else setDonationCount(data.length);
   };
 
-  // Fetch nearby requested donations
+  // 📦 Fetch nearby requested donations
   const fetchNearbyRequests = async (lat, lon) => {
     const { data, error } = await supabase.from("requested_donations").select("*");
     if (error) {
@@ -88,9 +117,11 @@ export default function DonorDashboard() {
     setNearbyRequests(nearby);
   };
 
+  // 🧾 Handle input changes
   const handleChange = (e) =>
     setDonation({ ...donation, [e.target.name]: e.target.value });
 
+  // 🎁 Handle new donation submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return alert("You must be logged in");
@@ -115,6 +146,31 @@ export default function DonorDashboard() {
     }
   };
 
+  // 🚫 Show access restriction message
+  if (error === "You are not authorized to access this page.") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
+          <h1 className="text-3xl font-bold text-red-600 mb-2">Access Denied 🚫</h1>
+          <p className="text-gray-700">This page is for Donors only.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 🧭 Show other errors (like not signed in)
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
+          <h1 className="text-2xl font-bold text-orange-600 mb-2">⚠️ {error}</h1>
+          <p className="text-gray-600">Please log in with a donor account.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Main Donor Dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex flex-col items-center py-10 px-4">
       <h2 className="text-4xl font-bold text-orange-600 mb-6">🍱 Donor Dashboard</h2>
@@ -171,9 +227,11 @@ export default function DonorDashboard() {
         </button>
       </form>
 
-      {/* Nearby Requested Donations Section */}
+      {/* Nearby Requested Donations */}
       <div className="w-full max-w-3xl">
-        <h3 className="text-2xl font-bold text-orange-600 mb-4">📍 Nearby Requested Donations</h3>
+        <h3 className="text-2xl font-bold text-orange-600 mb-4">
+          📍 Nearby Requested Donations
+        </h3>
         {nearbyRequests.length === 0 ? (
           <p className="text-gray-600">No nearby requests found.</p>
         ) : (
@@ -183,11 +241,8 @@ export default function DonorDashboard() {
                 key={req.id}
                 className="bg-white p-4 rounded-2xl shadow-md hover:shadow-xl transition"
               >
-                <h4 className="font-semibold text-gray-800">{req._name}</h4>
+                <h4 className="font-semibold text-gray-800">{req.item_name}</h4>
                 <p className="text-gray-600">Quantity: {req.quantity}</p>
-                <p className="text-gray-500 text-sm">
-                  Requested By: {req.requester_email || "Anonymous"}
-                </p>
                 <p className="text-gray-400 text-sm mt-1">Location: {req.location}</p>
               </div>
             ))}

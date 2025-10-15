@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function NeedyDashboard() {
@@ -16,6 +17,8 @@ export default function NeedyDashboard() {
     quantity: "",
     additional_notes: "",
   });
+
+  const router = useRouter();
 
   useEffect(() => {
     fetchUserAndLocation();
@@ -33,6 +36,27 @@ export default function NeedyDashboard() {
     const user = userData?.user;
     if (!user) {
       setError("No authenticated user found.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Fetch role from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Profile fetch error:", profileError);
+      setError("Unable to fetch user role.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Role-based restriction
+    if (profile?.role !== "needy") {
+      setError("You are not authorized to access this page.");
       setLoading(false);
       return;
     }
@@ -70,7 +94,11 @@ export default function NeedyDashboard() {
       const { error } = await supabase
         .from("needy_locations")
         .upsert(
-          { user_id: uid, location: `${lat},${lon}`, updated_at: new Date().toISOString() },
+          {
+            user_id: uid,
+            location: `${lat},${lon}`,
+            updated_at: new Date().toISOString(),
+          },
           { onConflict: "user_id" }
         );
       if (error) console.error("Location update error:", error);
@@ -209,6 +237,22 @@ export default function NeedyDashboard() {
     }
   };
 
+  // 🔒 Unauthorized access view
+  if (error === "You are not authorized to access this page.") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
+          <h1 className="text-3xl font-bold text-red-600 mb-2">
+            🚫 Access Denied
+          </h1>
+          <p className="text-gray-700">
+            This page is for <span className="font-semibold">Needy</span> users only.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-rose-100 flex flex-col items-center py-10 px-4">
       <div className="text-center mb-10">
@@ -216,13 +260,19 @@ export default function NeedyDashboard() {
           🙏 Welcome to Needy Dashboard
         </h1>
         <p className="text-gray-600 mt-2 text-lg">
-          Find <span className="font-semibold text-orange-600">nearby food donations</span> or request help 🌍
+          Find{" "}
+          <span className="font-semibold text-orange-600">
+            nearby food donations
+          </span>{" "}
+          or request help 🌍
         </p>
       </div>
 
       {/* Request Donation Form */}
       <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-lg mb-10 border border-orange-100">
-        <h2 className="text-xl font-bold text-orange-700 mb-4">📩 Request Food Donation</h2>
+        <h2 className="text-xl font-bold text-orange-700 mb-4">
+          📩 Request Food Donation
+        </h2>
         <div className="flex flex-col gap-3">
           <input
             type="text"
@@ -257,9 +307,13 @@ export default function NeedyDashboard() {
       </div>
 
       {loading && (
-        <p className="text-lg text-yellow-700 animate-pulse">Loading nearby donations...</p>
+        <p className="text-lg text-yellow-700 animate-pulse">
+          Loading nearby donations...
+        </p>
       )}
-      {error && <p className="text-red-600 font-semibold">{error}</p>}
+      {error && error !== "You are not authorized to access this page." && (
+        <p className="text-red-600 font-semibold">{error}</p>
+      )}
 
       {!loading && filteredDonations.length === 0 && (
         <p className="bg-yellow-100 px-4 py-2 rounded-full text-yellow-800 shadow-md">
@@ -276,7 +330,9 @@ export default function NeedyDashboard() {
             <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full opacity-30 blur-xl"></div>
 
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-bold text-xl text-orange-700">{d.food_name}</h3>
+              <h3 className="font-bold text-xl text-orange-700">
+                {d.food_name}
+              </h3>
               <span
                 className={`text-sm font-medium px-2 py-1 rounded-full ${
                   isExpired(d.expiry_time)
@@ -289,12 +345,29 @@ export default function NeedyDashboard() {
             </div>
 
             <div className="space-y-1 text-gray-700">
-              <p>🍽️ <span className="font-semibold">{d.quantity}</span> servings available</p>
-              <p>⏰ <span className="font-semibold">{new Date(d.expiry_time).toLocaleString()}</span></p>
-              <p>📍 Location: <span className="font-semibold">{d.location || "Not provided"}</span></p>
+              <p>
+                🍽️ <span className="font-semibold">{d.quantity}</span> servings
+                available
+              </p>
+              <p>
+                ⏰{" "}
+                <span className="font-semibold">
+                  {new Date(d.expiry_time).toLocaleString()}
+                </span>
+              </p>
+              <p>
+                📍 Location:{" "}
+                <span className="font-semibold">
+                  {d.location || "Not provided"}
+                </span>
+              </p>
               {d.distance && (
                 <p className="text-sm text-gray-600 mt-1">
-                  📏 <span className="font-semibold">{d.distance.toFixed(2)} km</span> away
+                  📏{" "}
+                  <span className="font-semibold">
+                    {d.distance.toFixed(2)} km
+                  </span>{" "}
+                  away
                 </p>
               )}
             </div>
@@ -304,9 +377,13 @@ export default function NeedyDashboard() {
             <div className="mt-4">
               {d.claimed_by ? (
                 d.claimed_by === userId ? (
-                  <span className="text-green-600 font-semibold">✅ Claimed by you</span>
+                  <span className="text-green-600 font-semibold">
+                    ✅ Claimed by you
+                  </span>
                 ) : (
-                  <span className="text-red-600 font-semibold">❌ Already claimed</span>
+                  <span className="text-red-600 font-semibold">
+                    ❌ Already claimed
+                  </span>
                 )
               ) : (
                 <button
