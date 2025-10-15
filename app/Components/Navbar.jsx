@@ -8,10 +8,10 @@ export default function Navbar() {
         {/* Left cluster: Urgent + left links */}
         <div className="flex items-center gap-4 md:gap-8">
           <Link
-            href="#urgent"
+            href="/charity"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--color-destructive)] px-4 py-2 text-sm font-medium text-[var(--color-primary-foreground)] shadow-sm"
           >
-            <span>Urgent</span>
+            <span>Charity</span>
             <Shield className="h-4 w-4" aria-hidden="true" />
           </Link>
 
@@ -24,7 +24,7 @@ export default function Navbar() {
               NGO
             </Link>
             <Link
-              href="#super-mom"
+              href="/donaters"
               className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
             >
               Donaters
@@ -57,14 +57,14 @@ export default function Navbar() {
         <div className="flex items-center gap-4 md:gap-8 justify-end">
           <div className="hidden md:flex items-center gap-6">
             <Link
-              href="#pepcares"
+              href="/about-us"
               className="group inline-flex items-center gap-1 text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
             >
               About Us
               <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-[1px]" />
             </Link>
             <Link
-              href="#iam"
+              href="/contact-us"
               className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
             >
               Contact Us
@@ -72,10 +72,10 @@ export default function Navbar() {
           </div>
 
           <Link
-            href="#donate"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-dark)] px-5 py-2.5 text-sm font-semibold text-[var(--color-primary-foreground)] shadow-sm"
+            href="/login"
+            className="inline-flex items-center gap-2 rounded-full bg-red-400 px-5 py-2.5 text-sm font-semibold text-[var(--color-primary-foreground)] shadow-sm"
           >
-            <span>Donate</span>
+            <span>Login/Register</span>
             <HandHeart className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>

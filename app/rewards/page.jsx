@@ -175,6 +175,7 @@ export default function RewardPage() {
                   {gift.pointsRequired} Points
                 </p>
               </div>
+              
 
               <button
                 onClick={() => handleClaim(gift)}

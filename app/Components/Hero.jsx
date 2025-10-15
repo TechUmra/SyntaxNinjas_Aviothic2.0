@@ -24,13 +24,13 @@ export default function Hero() {
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
-                href="#donate"
+                href="/dashboard/donor"
                 className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
               >
                 Donate food
               </Link>
               <Link
-                href="#request"
+                href="/dashboard/needy"
                 className="px-6 py-3 rounded-lg bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300 transition"
               >
                 Request assistance
@@ -45,7 +45,7 @@ export default function Hero() {
           {/* Right Column */}
           <div className="relative">
             <img
-              src="/fresh-produce-food-donation-table.jpg"
+              src="https://res.cloudinary.com/doficc2yl/image/upload/v1760518677/BhojanGo_xycyu1.png"
               alt="Fresh produce and prepared meals organized for donation"
               className="w-full h-auto rounded-lg border border-gray-200 shadow-sm"
             />

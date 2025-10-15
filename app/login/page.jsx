@@ -48,6 +48,12 @@ export default function LoginPage() {
           >
             Login
           </button>
+          <p className="text-sm text-gray-600 text-center mt-4">
+          Don't have an account?{" "}
+          <a href="/signup" className="text-orange-500 font-semibold">
+            Signup
+          </a>
+        </p>
         </form>
       </div>
     </div>

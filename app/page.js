@@ -10,7 +10,7 @@ import Partners from "./Components/Partners";
 export default function HomePage() {
   return (
     <main>
-      
+      <div></div>
       <Hero />
       <HowItWorks />
       <ImpactStats />
