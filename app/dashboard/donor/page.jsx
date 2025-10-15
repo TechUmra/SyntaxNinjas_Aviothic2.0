@@ -173,13 +173,22 @@ export default function DonorDashboard() {
   // ✅ Main Donor Dashboard
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex flex-col items-center py-10 px-4">
-      {/* 🔘 Top Right Button */}
-      <button
-        onClick={() => router.push("/requested")}
-        className="absolute top-5 right-5 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-orange-600 transition font-semibold"
-      >
-        Requested Donations
-      </button>
+      {/* 🔘 Top Right Buttons */}
+      <div className="absolute top-5 right-5 flex gap-3">
+        <button
+          onClick={() => router.push("/requested")}
+          className="bg-orange-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-orange-600 transition font-semibold"
+        >
+          Requested Donations
+        </button>
+
+        <button
+          onClick={() => router.push("/rewards")}
+          className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-yellow-600 transition font-semibold"
+        >
+          Rewards
+        </button>
+      </div>
 
       <h2 className="text-4xl font-bold text-orange-600 mb-6">🍱 Donor Dashboard</h2>
 
